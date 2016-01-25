@@ -1,0 +1,1 @@
+Initial support for Android Auto over USB. Requires SDL and libusb.

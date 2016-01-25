@@ -41,6 +41,5 @@ private:
 #define ANONYMOUS_VARIABLE(str) CONCATENATE(str, __LINE__)
 
 #define ON_BLOCK_EXIT auto ANONYMOUS_VARIABLE(scopeGuard) = scope_guard_t
-#define ON_BLOCK_EXIT_OBJ auto ANONYMOUS_VARIABLE(scopeGuard) = scope_guard_t
 
 #endif //AAUTO_SCOPE_GUARD_H
