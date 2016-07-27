@@ -10,6 +10,12 @@
 #include <memory>
 #include <sstream>
 #include <stdexcept>
+#include <stdio.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <mutex>
+#include <condition_variable>
+#include <string.h>
 #include "scope_guard.h"
 #include <vector>
 

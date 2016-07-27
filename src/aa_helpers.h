@@ -159,8 +159,10 @@ inline std::string desc(const packet_ptr_t &pack)
     for(int f=0;f<32 && f< pack->content_.size();++f)
         content_out << std::hex << (uint)pack->content_[f]/16 << (uint)pack->content_[f]%16;
 
-    return str_out_t() << lookup_name(m) << ":chan=" << (uint)pack->chan_ << ":len="
+    str_out_t p;
+    p << lookup_name(m) << ":chan=" << (uint)pack->chan_ << ":len="
            << pack->content_.size() << ":data=" << content_out.str();
+    return p;
 }
 
 inline void encode_varint_to(int64_t val, buf_t &target)

@@ -96,22 +96,29 @@ buf_t crypto_context_t::do_handshake(const buf_t &input, size_t pos) {
             throw std::runtime_error("Handshake completed with pending input");
 
         int err = SSL_get_error(this->ssl_.get(), ret);
-        if (err && err != SSL_ERROR_WANT_READ && err != SSL_ERROR_WANT_WRITE)
-            throw std::runtime_error(str_out_t() << "Unexpected error from SSL: " << err);
+        if (err && err != SSL_ERROR_WANT_READ && err != SSL_ERROR_WANT_WRITE) {
+            str_out_t p;
+            p << "Unexpected error from SSL: " << err;
+            throw std::runtime_error(p);
+        }
 
         int pending = BIO_pending(this->write_bio_);
         if (pending != 0) {
             res_buf.resize(res_buf.size() + pending);
             int res = BIO_read(this->write_bio_, &res_buf.at(res_buf.size()-pending), pending);
-            if (res != pending)
-                throw std::runtime_error(str_out_t() << "Pending bytes: "<<pending
-                                         <<" differ from read: " << res);
+            if (res != pending) {
+                str_out_t p;
+                p << "Pending bytes: " << pending << " differ from read: " << res;
+                throw std::runtime_error(p);
+            }
         } else if (in_pos < input.size()) {
             int res=BIO_write(this->read_bio_,
                               &input.at(in_pos), safe_cast<int>(input.size() - in_pos));
-            if (res <= 0)
-                throw std::runtime_error(str_out_t() << "SSL library refused read of "
-                                         <<(input.size() - in_pos)<<" bytes");
+            if (res <= 0) {
+                str_out_t p;
+                p << "SSL library refused read of " << (input.size() - in_pos) << " bytes";
+                throw std::runtime_error(p);
+            }
             in_pos += res;
         } else {
             break; //Nothing to do
@@ -135,16 +142,21 @@ buf_t crypto_context_t::encrypt(const buf_t &input, size_t pos) {
     //We are using memory BIOs which can expand indefinitely, so SSL_write
     //must always succeed.
     int ret = SSL_write(this->ssl_.get(), &input.at(pos), safe_cast<int>(input.size()-pos));
-    if (ret != input.size())
-        throw std::runtime_error(str_out_t() << "Failed to encrypt " << input.size() << " bytes");
+    if (ret != input.size()) {
+        str_out_t p;
+        p << "Failed to encrypt " << input.size() << " bytes";
+        throw std::runtime_error(p);
+    }
 
     int pending = BIO_pending(this->write_bio_);
     if (pending != 0) {
         res_buf.resize(res_buf.size() + pending);
         int res = BIO_read(this->write_bio_, &res_buf.at(res_buf.size()-pending), pending);
-        if (res != pending)
-            throw std::runtime_error(str_out_t() << "Pending bytes: "<<pending
-                                     <<" differ from read: " << res);
+        if (res != pending) {
+            str_out_t p;
+            p << "Pending bytes: " << pending << " differ from read: " << res;
+            throw std::runtime_error(p);
+        }
     }
 
     return std::move(res_buf);
@@ -157,9 +169,11 @@ buf_t crypto_context_t::decrypt(const buf_t &input, size_t pos) {
     //BIO write is guaranteed to succeed, since we're using memory-based
     //BIOs that can expand to any size
     int res = BIO_write(this->read_bio_, &input.at(pos), safe_cast<int>(input.size()-pos));
-    if (res != input.size())
-        throw std::runtime_error(str_out_t() << "Input bytes: "<< input.size()
-                                 <<" differ from written: " << res);
+    if (res != input.size()) {
+        str_out_t p;
+        p << "Input bytes: " << input.size() << " differ from written: " << res;
+        throw std::runtime_error(p);
+    }
 
     int size_step = safe_cast<int>(input.size());
     buf_t res_buf;
@@ -171,8 +185,11 @@ buf_t crypto_context_t::decrypt(const buf_t &input, size_t pos) {
         int ret = SSL_read(this->ssl_.get(), &res_buf.at(pos), size_step);
         if (SSL_get_error(this->ssl_.get(), ret) == SSL_ERROR_WANT_READ)
             break;
-        if (ret <= 0)
-            throw std::runtime_error(str_out_t() << "SSL read failed, error="<<ret);
+        if (ret <= 0) {
+            str_out_t p;
+            p << "SSL read failed, error=" << ret;
+            throw std::runtime_error(p);
+        }
 
         //Snap our buffer back to real size
         res_buf.resize(pos+ret);

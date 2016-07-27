@@ -216,15 +216,20 @@ transport_t::transport_t(const usb_context_ptr_t &ctx_, const device_ptr_t &dev,
         TA_DEBUG() << "Failed to claim USB interface, try " << n;
         terminator_->sleep(200);
     }
-    if (ret != 0)
-        throw std::runtime_error(
-                str_out_t() << "Failed to claim USB interface: " << libusb_error_name(ret));
+    if (ret != 0) {
+        str_out_t p;
+        p << "Failed to claim USB interface: " << libusb_error_name(ret);
+        throw std::runtime_error(p);
+    }
 
     TA_DEBUG() << "Claimed USB interface";
 
     ret = libusb_set_interface_alt_setting(dev.get(), interface_id, alt_setting_id);
-    if (ret != 0)
-        throw std::runtime_error(str_out_t() << "Failed to select configuration " << alt_setting_id);
+    if (ret != 0) {
+        str_out_t p;
+        p << "Failed to select configuration " << alt_setting_id;
+        throw std::runtime_error(p);
+    }
 
     TA_INFO() << "USB interface ready";
 
